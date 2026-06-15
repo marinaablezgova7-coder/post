@@ -14,30 +14,100 @@ data class Likes(
 )
 
 data class Post(
-    val id: Int = 0,
-    val ownerId: Int = 0,
-    val fromId: Int = 0,
-    val createdBy: Int = 0,
-    val date: Int = 0,
-    val text: String = "",
-    val replyOwnerId: Int = 0,
-    val replyPostId: Int = 0,
-    val friendsOnly: Boolean = false,
-    val markedAsAds: Boolean = false,
-    val favorite: Boolean = false,
-    val comments: Comments = Comments(),
-    val likes: Likes = Likes()
+    val id: Int,
+    val ownerId: Int,
+    val fromId: Int,
+    val createdBy: Int?,
+    val date: Int,
+    val text: String?,
+    val replyOwnerId: Int?,
+    val replyPostId: Int?,
+    val friendsOnly: Boolean,
+    val copyright: String?,
+    val signerId: Int?,
+    val canPin: Boolean,
+    val canDelete: Boolean,
+    val canEdit: Boolean,
+    val isPinned: Boolean,
+    val markedAsAds: Boolean,
+    val isFavorite: Boolean,
+    val attachments: Array<Attachment> = emptyArray()
 )
+
+data class Photo(
+    val id: Int,
+    val ownerId: Int,
+    val photo130: String,
+    val photo604: String
+)
+
+data class PhotoAttachment(
+    val photo: Photo
+) : Attachment() {
+
+    override val type: String = "photo"
+}
+
+data class Video(
+    val id: Int,
+    val ownerId: Int,
+    val title: String,
+    val duration: Int
+)
+
+data class VideoAttachment(
+    val video: Video
+) : Attachment() {
+
+    override val type: String = "video"
+}
+
+data class Audio(
+    val id: Int,
+    val ownerId: Int,
+    val artist: String,
+    val title: String,
+    val duration: Int
+)
+
+data class AudioAttachment(
+    val audio: Audio
+) : Attachment() {
+
+    override val type: String = "audio"
+}
+
+data class Document(
+    val id: Int,
+    val ownerId: Int,
+    val title: String,
+    val size: Int
+)
+
+data class DocumentAttachment(
+    val document: Document
+) : Attachment() {
+
+    override val type: String = "doc"
+}
+
+data class Link(
+    val url: String,
+    val title: String,
+    val caption: String?
+)
+
+data class LinkAttachment(
+    val link: Link
+) : Attachment() {
+
+    override val type: String = "link"
+}
 
 object WallService {
 
     private var posts = emptyArray<Post>()
     private var nextId = 1
-
-    fun clear() {
-        posts = emptyArray()
-        nextId = 1
-    }
 
     fun add(post: Post): Post {
         val postWithId = post.copy(id = nextId++)
@@ -46,49 +116,69 @@ object WallService {
     }
 
     fun update(post: Post): Boolean {
-        for (index in posts.indices) {
-            if (posts[index].id == post.id) {
-                posts[index] = post
+        for ((index, currentPost) in posts.withIndex()) {
+            if (currentPost.id == post.id) {
+
+                posts[index] = post.copy(
+                    ownerId = currentPost.ownerId,
+                    date = currentPost.date
+                )
+
                 return true
             }
         }
         return false
     }
+
+    fun clear() {
+        posts = emptyArray()
+        nextId = 1
+    }
 }
 
 fun main() {
 
-    val firstPost = WallService.add(
-        Post(
+    val photoAttachment = PhotoAttachment(
+        Photo(
+            id = 1,
             ownerId = 1,
-            text = "Первый пост"
+            photo130 = "url130",
+            photo604 = "url604"
         )
     )
 
-    val secondPost = WallService.add(
-        Post(
-            ownerId = 2,
-            text = "Второй пост"
+    val videoAttachment = VideoAttachment(
+        Video(
+            id = 10,
+            ownerId = 1,
+            title = "Funny Video",
+            duration = 30
         )
     )
 
-    println(firstPost)
-    println(secondPost)
-
-    val updated = Post(
-        id = firstPost.id,
+    val post = Post(
+        id = 0,
         ownerId = 1,
-        text = "Первый пост обновлен"
+        fromId = 1,
+        createdBy = null,
+        date = 1711111111,
+        text = "Пост с вложениями",
+        replyOwnerId = null,
+        replyPostId = null,
+        friendsOnly = false,
+        copyright = null,
+        signerId = null,
+        canPin = true,
+        canDelete = true,
+        canEdit = true,
+        isPinned = false,
+        markedAsAds = false,
+        isFavorite = false,
+        attachments = arrayOf(
+            photoAttachment,
+            videoAttachment
+        )
     )
 
-    println(WallService.update(updated)) // true
-
-    println(
-        WallService.update(
-            Post(
-                id = 999,
-                text = "Такого поста нет"
-            )
-        )
-    ) // false
+    WallService.add(post)
 }
