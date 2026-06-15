@@ -30,38 +30,60 @@ data class Post(
 )
 
 object WallService {
-    var posts = emptyArray<Post>()
 
-    fun add(post: Post) {
-        posts += post
+    private var posts = emptyArray<Post>()
+    private var nextId = 1
+
+    fun add(post: Post): Post {
+        val postWithId = post.copy(id = nextId++)
+        posts += postWithId
+        return postWithId
     }
 
-    fun printPosts() {
-        for (post in posts) {
-            println(post)
+    fun update(post: Post): Boolean {
+        for (index in posts.indices) {
+            if (posts[index].id == post.id) {
+                posts[index] = post
+                return true
+            }
         }
+        return false
     }
 }
 
 fun main() {
-    val post1 = Post(
-        id = 1,
-        ownerId = 100,
-        fromId = 100,
-        date = 1680000000,
-        text = "Привет, мир!"
+
+    val firstPost = WallService.add(
+        Post(
+            ownerId = 1,
+            text = "Первый пост"
+        )
     )
 
-    val post2 = Post(
-        id = 2,
-        ownerId = 101,
-        fromId = 101,
-        text = "Мой второй пост",
-        likes = Likes(count = 15)
+    val secondPost = WallService.add(
+        Post(
+            ownerId = 2,
+            text = "Второй пост"
+        )
     )
 
-    WallService.add(post1)
-    WallService.add(post2)
+    println(firstPost)
+    println(secondPost)
 
-    WallService.printPosts()
+    val updated = Post(
+        id = firstPost.id,
+        ownerId = 1,
+        text = "Первый пост обновлен"
+    )
+
+    println(WallService.update(updated)) // true
+
+    println(
+        WallService.update(
+            Post(
+                id = 999,
+                text = "Такого поста нет"
+            )
+        )
+    ) // false
 }
